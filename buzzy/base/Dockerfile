@@ -3,11 +3,11 @@ FROM mcr.microsoft.com/windows/servercore:ltsc2019
 # Metadata indicating an image maintainer.
 LABEL maintainer="ajeetsinghtomer@gmail.com"
 
-ARG NODE_VERSION
-ENV NODE_VERSION ${NODE_VERSION:-12.16.1}
-ENV PHANTOMJS_VERSION=1.9.8
+ARG NODE_VERSION=12.16.1
+ENV node_version=$NODE_VERSION
 
-ONBUILD ENV NODE_VERSION ${NODE_VERSION:-12.16.1}
+ARG PHANTOMJS_VERSION=1.9.8
+ENV phantomjs_version=$PHANTOMJS_VERSION
 
 ### We will use chocolatey to install packages
 ENV chocolateyUseWindowsCompression false
@@ -20,22 +20,13 @@ RUN powershell -Command \
     choco install 7zip -y --force ; \
     choco install nodejs.install -y --force --version="%NODE_VERSION%" ; \
     choco install phantomjs -y --force --version="%PHANTOMJS_VERSION%" ; \
-    New-Item -ItemType "directory" -Path "c:\tmp"
-
-## Chocolatery is installing older version of meteor, so we are manually installing it
-ADD http://static-meteor.netdna-ssl.com/packages-bootstrap/1.10.2/meteor-bootstrap-os.windows.x86_64.tar.gz "c:/tmp/meteor.tar.gz"
-RUN powershell -Command \
-    7z x c:/tmp/meteor.tar.gz -o"c:/tmp/" ; \
-    7z x c:/tmp/meteor.tar -o"%LocalAppData%" 
-
-## Cleanup
-RUN powershell -command \ 
-    Remove-Item c:/tmp/*.* -Force 
-
-RUN setx /M Path "%LocalAppData%\\.meteor;%Path%"
+    New-Item -ItemType "directory" -Path "c:\tmp" ; \
+	New-Item -ItemType "directory" -Path "c:/bundle"
 
 ## These scripts are for testing purpose only
 COPY tests c:/tests
+
+COPY libs c:/libs
 
 #RUN powershell -Command "choco install meteor -y --force"
 
@@ -44,4 +35,5 @@ ENV NPM_CONFIG_LOGLEVEL info
 
 #RUN npm install -g windows-build-tools
 
-CMD npm && cmd
+###CMD npm && cmd
+CMD C:\libs\run_app.bat && cmd
