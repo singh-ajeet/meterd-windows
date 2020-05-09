@@ -9,7 +9,7 @@ mkdir C:\tmp\bundle-dir
 
 if "%errorlevel%"=="1" (
 	ECHO "Failed to create required directories."
-	GOTO END
+	GOTO :END
 )
 
 ECHO "=>########## Assuming that your app already in C:/app directory"
@@ -17,7 +17,7 @@ ECHO "=> Copying the app to %COPIED_APP_PATH%"
 COPY "C:\app" "%COPIED_APP_PATH%"
 
 if "%errorlevel%"=="1" (
-	GOTO END
+	GOTO :END
 )
 
 CD "%COPIED_APP_PATH%"
@@ -26,7 +26,7 @@ ECHO "=> Executing NPM install --production"
 meteor npm install --production
 
 if "%errorlevel%"=="1" (
-	GOTO END
+	GOTO :END
 )
 
 mkdir c:\buzzybuildwindows
@@ -36,7 +36,7 @@ meteor build ../buzzybuildwindows --server-only --allow-superuser --directory "%
 REM #### meteor build ../buzzybuildwindows --server-only --architecture os.windows.x86_64
 
 if "%errorlevel%"=="1" (
-	GOTO END
+	GOTO :END
 )
 
 ECHO "=> Printing Meteor Node information..."
