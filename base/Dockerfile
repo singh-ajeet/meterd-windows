@@ -33,7 +33,7 @@ COPY libs c:/libs
 ENV NPM_CONFIG_LOGLEVEL info
 ### to compile native Node modules, we need windows build tools
 
-#RUN npm install -g windows-build-tools
+RUN powershell -Command \
+    npm install --global windows-build-tools@4.0.0
 
-###CMD npm && cmd
 CMD C:\libs\run_app.bat && cmd
