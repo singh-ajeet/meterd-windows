@@ -1,16 +1,21 @@
 FROM buzzy:base-ltsc2019
 
-# copy the newer app source from the local app directory
-COPY app "C:/app"
+# copy the newer app source from the local app directory to container
+ONBUILD COPY ./ c:/app
 
 # Set the working directory
-WORKDIR "C:/app"
+ONBUILD WORKDIR "C:/app"
 
-# falling back to the npm http registry overcomes some issues with proxy servers
-RUN npm config set strict-ssl false
-RUN npm config set registry "http://registry.npmjs.org/"
-RUN npm install
+## Chocolatery is installing older version of meteor, so we are manually installing it
+ONBUILD ADD http://static-meteor.netdna-ssl.com/packages-bootstrap/1.10.2/meteor-bootstrap-os.windows.x86_64.tar.gz "c:/tmp/meteor.tar.gz"
+ONBUILD RUN powershell -Command \
+           7z x c:/tmp/meteor.tar.gz -o"c:/tmp/" ; \
+           7z x c:/tmp/meteor.tar -o"LocalAppData%" 
 
-ENV PORT 8675
-CMD ["node", "C:/app/index.js"]
+## Cleanup
+ONBUILD RUN RUN powershell -command \ 
+        Remove-Item c:/tmp/*.*  -Force
 
+ONBUILD RUN RUN setx /M Path "%LocalAppData%\\.meteor;%Path%"
+
+ONBUILD RUN "cmd /c c:/libs/build_app.bat"
