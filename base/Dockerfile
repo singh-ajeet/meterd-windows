@@ -36,4 +36,6 @@ ENV NPM_CONFIG_LOGLEVEL info
 RUN powershell -Command \
     npm install --global windows-build-tools@4.0.0
 
+EXPOSE 80
+
 CMD C:\libs\run_app.bat && cmd
