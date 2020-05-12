@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/windows/servercore:ltsc2019
+FROM mcr.microsoft.com/windows/servercore:ltsc2019	
 
 # Metadata indicating an image maintainer.
 LABEL maintainer="ajeetsinghtomer@gmail.com"
@@ -21,20 +21,24 @@ RUN powershell -Command \
     choco install nodejs.install -y --force --version="%NODE_VERSION%" ; \
     choco install phantomjs -y --force --version="%PHANTOMJS_VERSION%" ; \
     New-Item -ItemType "directory" -Path "c:\tmp" ; \
-	New-Item -ItemType "directory" -Path "c:/bundle"
+    New-Item -ItemType "directory" -Path "c:/bundle"
 
 ## These scripts are for testing purpose only
 COPY tests c:/tests
 
 COPY libs c:/libs
 
-#RUN powershell -Command "choco install meteor -y --force"
+user ContainerAdministrator
+RUN whoami
+
+RUN echo "=> Installing meteor ..."
+RUN powershell -Command "choco install meteor -y --force"
 
 ENV NPM_CONFIG_LOGLEVEL info
-### to compile native Node modules, we need windows build tools
 
-RUN powershell -Command \
-    npm install --global windows-build-tools@4.0.0
+### to compile native Node modules, we need windows build tools
+##RUN powershell -Command \
+##    npm install --global windows-build-tools@4.0.0
 
 EXPOSE 80
 
