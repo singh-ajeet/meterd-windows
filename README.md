@@ -29,12 +29,7 @@ docker build -t your_application:version-ltsc2019 .
 ###### Run application
 
 ```
-docker run -d \
-    -e ROOT_URL=http://yourapp.com \
-    -e MONGO_URL=mongodb://url \
-    -e MONGO_OPLOG_URL=mongodb://oplog_url \
-    -p 8080:80 \
-    yourname/app
+docker run  -e ROOT_URL=http://localhost:3000 -p 9000:3000 -it buzzy:hello-ltsc2019
 ```
 
 
