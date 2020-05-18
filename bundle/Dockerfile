@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/windows/servercore:ltsc2019
+FROM mcr.microsoft.com/windows/servercore:ltsc2019 as builder
 
 # Metadata indicating an image maintainer.
 LABEL maintainer="ajeetsinghtomer@gmail.com"
@@ -42,13 +42,10 @@ RUN powershell -Command \
     choco install phantomjs -y --force --version="%PHANTOMJS_VERSION%" ; \
     choco install awscli -y --force ; \
     New-Item -ItemType "directory" -Path "c:\tmp\bundleDir" ; \
-    New-Item -ItemType "directory" -Path "c:\builtApp"
-
-ENV NPM_CONFIG_LOGLEVEL info
+    New-Item -ItemType "directory" -Path "c:\app"
 
 RUN npm install --global --production --add-python-to-path windows-build-tools --vs2015
 
-COPY libs c:/libs
 RUN aws s3 cp "%S3_PATH%" c:/tmp
 
 RUN ECHO "=> Extracting and deploying application ..."
@@ -56,24 +53,22 @@ RUN powershell -Command \
             7z x c:/tmp/*.tar.gz -o"c:\tmp" ; \
             7z x c:/tmp/*.tar -o"c:\tmp\bundleDir"  ; \
             Set-Location -Path "C:\tmp\bundleDir\bundle\programs\server" ; \
-            npm install node-gyp ; \
-            npm install bcrypt ; \
             npm install --production ; \
-            Set-Location -Path "c:\builtApp" ; \
-            Copy-Item -Path "C:\tmp\bundleDir\bundle\*" -Destination "C:\builtApp" -Recurse ; \
+            Set-Location -Path "c:\app" ; \
+            Copy-Item -Path "C:\tmp\bundleDir\bundle\*" -Destination "C:\app" -Recurse ; \
             Remove-Item -LiteralPath "c:\tmp" -Force -Recurse
 
-RUN ECHO "=> Printing System Node information"
-RUN powershell -command \
-        ECHO "  => platform"   ; \
-        node -p process.platform   ; \
-        ECHO "  => arch"   ; \
-        node -p process.arch   ; \
-        ECHO "  => versions"   ; \
-        node -p process.versions
+########## Now make the target image ########################
+FROM mcr.microsoft.com/windows/nanoserver:1809
+COPY --from=builder ["C:/Program Files/nodejs", "C:/Program Files/nodejs"]
+COPY --from=builder ["C:/app", "C:/app"]
+COPY bundle/libs c:/libs
 
-EXPOSE 3000
+# Add the command and bin directories to the environment path
+ENV PATH "C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\;C:\\Program Files\\nodejs;C:\\Users\\ContainerAdministrator\\AppData\\Roaming\\npm"
 
-WORKDIR c:/builtApp
+WORKDIR "C:/app"
 
+ENV PORT 3000
+EXPOSE ${PORT}
 CMD "c:\libs\app_run.bat" && cmd
